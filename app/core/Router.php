@@ -24,7 +24,26 @@ $this->routes[] = [
         $uri = parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
 
 
-        foreach ($this->routes as $route) 
+        foreach ($this->routes as $route) {
+            $pattern = str_replace(
+                '{id}',
+                '([0-9]+)',
+                $route['uri'],
+            );
+            $pattern = '#^'. $pattern .'$#';
+
+            if (preg_match($pattern, $uri, $matches)) {
+                array_shift($matches);
+                require_once './app/controllers'. $route['controller'].'.php';  
+
+                $controllerClass = 'App\\Controllers\\'. $route['controller'];
+                $controller = new $controllerClass();
+                $function = $route['function'];
+
+                call_user_func_array([$controller, $function],$matches);
+                return;
+            }
+        }
 
         if ($method == 'GET' && $uri == '/students') {
             require_once './app/controllers/StudentController.php';
